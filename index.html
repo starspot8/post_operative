@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="VisiTrack demo dashboard untuk pemantauan pasien pasca-tindakan mata." />
+  <title>VisiTrack — Dashboard Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">V</span><span>VisiTrack</span><small>CARE MONITORING</small></div>
+      <nav aria-label="Navigasi utama">
+        <a class="nav-item active" href="#dashboard"><span>⌂</span> Dashboard</a>
+        <a class="nav-item" href="#patients"><span>♙</span> Semua Pasien</a>
+        <a class="nav-item" href="#checkins"><span>◷</span> Check-in Hari Ini <b>6</b></a>
+        <a class="nav-item" href="#reports"><span>▤</span> Laporan</a>
+      </nav>
+      <div class="sidebar-bottom"><div class="help-card"><strong>Butuh bantuan?</strong><p>Hubungi support VisiTrack</p><button>Chat Support</button></div><div class="user-card"><div class="avatar">NS</div><div><strong>Nadia Sari</strong><small>Perawat jaga</small></div><span>•••</span></div></div>
+    </aside>
+
+    <main class="main-content" id="dashboard">
+      <header class="topbar"><div class="mobile-brand"><span class="brand-mark">V</span>VisiTrack</div><div class="top-actions"><span class="date">Senin, 23 September 2026</span><button class="icon-button" aria-label="Notifikasi">♧<i></i></button><div class="avatar small">NS</div></div></header>
+      <section class="page-heading"><div><p class="eyebrow">RINGKASAN KLINIK</p><h1>Selamat pagi, Nadia <span>👋</span></h1><p class="muted">Berikut kondisi pasien yang perlu ditindaklanjuti hari ini.</p></div><button class="primary-button" id="addPatient">＋ Tambah Pasien</button></section>
+
+      <section class="stats-grid" aria-label="Ringkasan pasien"><article class="stat-card"><div class="stat-icon blue">♙</div><div><span>Total pasien aktif</span><strong>10</strong><small class="up">↑ 2 pasien dari kemarin</small></div></article><article class="stat-card"><div class="stat-icon red">!</div><div><span>Perlu perhatian</span><strong id="urgentCount">2</strong><small class="danger">Prioritas tinggi</small></div></article><article class="stat-card"><div class="stat-icon amber">◷</div><div><span>Menunggu check-in</span><strong id="pendingCount">3</strong><small class="muted">Hari ini</small></div></article><article class="stat-card"><div class="stat-icon green">✓</div><div><span>Check-in selesai</span><strong>5</strong><small class="up">↑ 12% minggu ini</small></div></article></section>
+
+      <section class="panel patient-panel" id="patients"><div class="panel-heading"><div><h2>Pasien hari ini</h2><p class="muted">Urut berdasarkan prioritas tindak lanjut</p></div><button class="text-button" id="exportButton">Unduh laporan ↓</button></div><div class="toolbar"><label class="search"><span>⌕</span><input id="searchInput" placeholder="Cari nama pasien..." /></label><div class="filters"><button class="filter active" data-filter="all">Semua <b>10</b></button><button class="filter" data-filter="urgent">🔴 Perhatian <b>2</b></button><button class="filter" data-filter="warning">🟡 Pantau <b>3</b></button><button class="filter" data-filter="normal">🟢 Normal <b>2</b></button><button class="filter" data-filter="pending">Abu-abu <b>3</b></button></div></div><div class="table-wrap"><table><thead><tr><th>Pasien</th><th>Tindakan</th><th>Check-in terakhir</th><th>Status</th><th></th></tr></thead><tbody id="patientRows"></tbody></table><div class="empty-state" id="emptyState">Pasien tidak ditemukan.</div></div></section>
+      <p class="demo-note">ℹ️ <strong>Mode demo:</strong> Data di halaman ini adalah data contoh dan tidak berisi informasi pasien nyata.</p>
+    </main>
+  </div>
+  <div class="modal-backdrop" id="modal"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="closeModal">×</button><div id="modalContent"></div></div></div>
+  <script src="app.js"></script>
+</body>
+</html>
