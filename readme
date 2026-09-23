@@ -1,0 +1,264 @@
+# VisiTrack — Spec Pengembangan
+## Sistem Pemantauan Pasca-Tindakan Mata: Katarak, Vitrektomi, LASIK, Oculoplasty & Injeksi
+
+---
+
+## 1. Ringkasan Produk
+
+Sistem check-in otomatis pasca-tindakan (via WhatsApp) yang mendukung alur kerja perawat yang sudah berjalan, dengan menstrukturkan komunikasi, menangkap data klinis terstandar, dan menandai pasien berisiko untuk ditindaklanjuti. Berlaku untuk 5 jenis tindakan — **Katarak, Vitrektomi, LASIK, Oculoplasty, dan Injeksi (intravitreal)** — dengan alur dan pertanyaan check-in yang sama untuk semua, kecuali jadwal kontrol untuk Injeksi (lihat Bagian 2).
+
+**Prinsip desain:** Sistem tidak menggantikan peran perawat — sistem memberi perawat data terstruktur sebelum kontak manual (telepon), supaya kontak jadi lebih terarah dan efisien.
+
+---
+
+## 2. Alur Kontak Pasien (Timeline)
+
+**Jadwal checkpoint final per prosedur** (data terbaru — menggantikan asumsi awal yang seragam):
+
+| Prosedur | Urutan Checkpoint |
+|---|---|
+| Katarak | 3 Jam → H+1 → H+3 → 1 Minggu → 1 Bulan |
+| Vitrektomi | 3 Jam → H+1 → H+3 → 1 Minggu → 1 Bulan |
+| LASIK | 3 Jam → H+1 → H+3 → 1 Minggu → 1 Bulan |
+| Oculoplasty | H+1 → 1 Minggu *(tidak ada check-in 3 Jam)* |
+| Injeksi | 3 Jam → 1 Bulan *(tidak ada H+1, H+3, atau 1 Minggu)* |
+
+**Metode kontak di setiap checkpoint:** Telepon perawat, didukung data check-in WA yang diisi pasien sebelumnya (kecuali edukasi awal yang tatap muka). Perawat jaga tersedia 24 jam, sehingga checkpoint bisa direspons kapan pun terjadwal.
+
+**Catatan penting:**
+- Oculoplasty **tidak** mengikuti check-in 3 Jam yang berlaku untuk prosedur lain — checkpoint pertamanya langsung di H+1
+- Injeksi punya jadwal paling ringkas — hanya 2 checkpoint (3 Jam dan 1 Bulan), tanpa H+1/H+3/1 Minggu
+
+---
+
+## 3. Detail Per Titik Kontak
+
+### 3.1 Titik 1 — Edukasi Pasca-Operasi (Segera Setelah Operasi)
+
+**Dilakukan oleh:** Perawat, tatap muka di klinik
+
+**Materi yang disampaikan:**
+- Jenis lensa yang digunakan + kartu lensa (dokumentasi fisik)
+- Cara pakai penutup mata
+- Larangan terkena air (sebelum kontrol ke dokter)
+- Pengambilan obat (diambil langsung di klinik)
+- Jadwal kontrol berikutnya
+- Nomor kontak darurat (emergency)
+- Anjuran istirahat cukup
+
+**Dukungan sistem:**
+- WA otomatis terkirim begitu status operasi pasien diinput selesai di sistem
+- Isi pesan: ringkasan tertulis dari semua poin edukasi di atas (jenis lensa, larangan air, jadwal kontrol, nomor emergency, dll)
+- Tujuan: pasien punya rujukan tertulis, mengurangi kebutuhan perawat menjelaskan ulang saat pasien lupa/telepon tanya kembali
+
+---
+
+### 3.2 Titik 2 — Check-in Cepat (3 Jam Pasca-Tindakan)
+
+**Berlaku untuk:** Katarak, Vitrektomi, LASIK, Injeksi (**tidak berlaku untuk Oculoplasty** — checkpoint pertama Oculoplasty langsung di H+1)
+
+**Dilakukan oleh:** Perawat (telepon), didukung data WA
+
+**Pertanyaan check-in (via WA, diisi sebelum perawat telepon):**
+
+| Pertanyaan | Pilihan Jawaban |
+|---|---|
+| Bagaimana kondisi mata saat ini? | Normal / Merah / Nyeri |
+
+**Logika trigger:**
+- Jika jawaban "Merah" atau "Nyeri" → otomatis muncul prompt: *"Mohon kirim foto mata untuk kami periksa"*
+
+**Isi telepon perawat (dengan konteks dari WA):**
+- Konfirmasi kondisi mata
+- Kalau merah → review foto, nilai kondisi
+- Ingatkan jadwal minum obat
+- Ingatkan jam kontrol besok
+- Ingatkan istirahat cukup
+- Info ulang: besok wajib kontrol
+
+---
+
+### 3.3 Titik 3 — Check-in H+1
+
+**Berlaku untuk:** Katarak, Vitrektomi, LASIK, Oculoplasty (**tidak berlaku untuk Injeksi**)
+
+**Dilakukan oleh:** Perawat (telepon), didukung data WA otomatis yang terkirim sebelum telepon
+
+**A. Pertanyaan Kepatuhan Instruksi**
+
+| Pertanyaan | Pilihan Jawaban | Flag |
+|---|---|---|
+| Obat sudah diminum/dipakai sesuai jadwal? | Sudah / Kadang lupa / Belum sama sekali | 🔴 jika "Belum sama sekali" |
+| Istirahat cukup semalam? | Cukup / Kurang | 🟡 jika "Kurang" |
+| Mata sudah kena air? | Belum / Sudah | 🔴 jika "Sudah" (terutama jika disertai gejala lain) |
+
+**B. Pertanyaan Klinis**
+
+| Pertanyaan | Pilihan Jawaban | Flag |
+|---|---|---|
+| Apakah masih terasa sakit di mata? | Tidak / Sedikit / Sakit sekali | 🔴 jika "Sakit sekali" |
+| Bagaimana penglihatannya? | Membaik / Masih buram seperti kemarin / Tambah buram | 🔴 jika "Tambah buram" |
+| Ada keluhan lain? (bisa pilih lebih dari satu) | Merah / Bengkak / Gatal / Tidak ada | 🟡 jika salah satu dipilih |
+
+**Logika trigger foto:**
+- Jika salah satu dari: Merah, Bengkak, Gatal, Sakit sekali, atau Tambah buram → otomatis prompt kirim foto mata
+
+**Level Prioritas Flag:**
+- 🔴 **Prioritas tinggi** (notifikasi real-time ke perawat, tidak menunggu dashboard pagi): Sakit sekali, Tambah buram, Belum minum obat sama sekali, Mata sudah kena air
+- 🟡 **Prioritas sedang** (masuk antrian review normal): Sedikit sakit, Masih buram seperti kemarin, Kadang lupa obat, Kurang istirahat, Merah/Bengkak/Gatal (tanpa gejala 🔴 lain)
+- 🟢 **Normal**: Semua jawaban baik, tidak ada gejala
+
+**Isi telepon perawat (dengan konteks dashboard):**
+- Perawat sudah lihat status flag pasien sebelum telepon
+- Kasus 🔴 → penilaian lebih detail, potensi eskalasi ke dokter
+- Kasus 🟢 → telepon lebih singkat, konfirmasi rutin
+- Info jam kedatangan kontrol
+
+---
+
+### 3.4 Titik 4 — Follow-up Lanjutan
+
+**Berlaku untuk:** Katarak, Vitrektomi, LASIK — checkpoint **H+3 → 1 Minggu → 1 Bulan**
+**Oculoplasty** — hanya **1 Minggu** (checkpoint kedua dan terakhirnya, setelah H+1)
+**Injeksi** — hanya **1 Bulan** (checkpoint kedua dan terakhirnya, setelah 3 Jam)
+
+**Pertanyaan check-in:** Mengikuti template yang sama seperti Titik 3 (H+1) — kepatuhan (obat, istirahat, mata kena air) + klinis (nyeri, penglihatan, keluhan lain merah/bengkak/gatal) — dikirim via WA sebelum kontrol/telepon di setiap checkpoint.
+
+---
+
+## 4. Fitur Dashboard Perawat/Klinik
+
+- Daftar pasien harian terurut berdasarkan level flag (🔴 → 🟡 → 🟢)
+- Tampilan gabungan: jawaban check-in + foto (jika ada) dalam satu layar per pasien
+- Notifikasi real-time untuk flag 🔴 (tidak menunggu jadwal cek dashboard rutin) — **klinik memiliki perawat jaga 24 jam**, jadi notifikasi ini bisa langsung diteruskan dan direspons kapan pun terjadi, tanpa jeda "jam kerja"
+- Riwayat check-in per pasien dalam satu timeline (dari Titik 1 sampai follow-up terakhir)
+- Export data untuk keperluan audit outcome / akreditasi klinik
+
+**Status:** Prototype dashboard sudah dibangun (menggunakan Lovable) dan bisa dicoba: https://id-preview--0e44c704-19b4-407c-93dc-47fcfed6a43b.lovable.app — berisi 12 data pasien contoh, filter per flag warna, panel detail per pasien, dan riwayat timeline check-in.
+
+---
+
+### 4.1 Pertimbangan Desain Khusus — Mayoritas Pasien Lansia
+
+Karena mayoritas pasien katarak dan vitrektomi adalah lansia (bukan anak muda), sisi pasien (WA) harus dirancang seramah mungkin:
+
+- Gunakan tombol pilihan (quick reply) di WA, bukan minta pasien mengetik jawaban sendiri
+- Satu pertanyaan per pesan, jangan form panjang sekaligus
+- Bahasa besar, sederhana, tanpa istilah medis rumit
+- Perlu antisipasi bahwa yang membalas WA kadang bukan pasien sendiri, melainkan anak/cucu/pendamping — sistem perlu opsi "diisi oleh pendamping" tanpa membingungkan siapa subjek jawaban
+- Foto mata sendiri (selfie mata) bisa jadi tantangan teknis bagi lansia — pertimbangkan instruksi visual/gambar contoh cara foto, atau opsi pendamping yang mengambil foto
+- Telepon perawat tetap jadi kanal utama yang paling nyaman untuk lansia — WA berfungsi sebagai pendukung/pre-screening sebelum telepon, bukan pengganti
+
+---
+
+### 4.2 Penanganan Jika Pasien Tidak Merespons Check-in
+
+Tidak merespons WA dianggap skenario umum (bukan pengecualian) mengingat mayoritas pasien lansia — nomor sering tidak dipegang sendiri, tidak standby, dll.
+
+**Alur:**
+1. **Reminder otomatis — 1 kali**, dikirim ulang setelah 30-60 menit tanpa jawaban
+2. **Setelah itu, dianggap "Belum Respons"** — tidak perlu reminder berulang, karena umumnya tidak akan dibalas lagi dan berisiko jadi noise
+3. **Telepon perawat tetap berjalan seperti biasa sesuai jadwal check-in** — WA tidak dijawab tidak mengubah/menunda jadwal telepon; telepon manual sudah jadi jalur utama yang andal untuk skenario ini
+
+**Dashboard:**
+- Kategori **"Belum Respons"** ditampilkan terpisah dari flag 🔴🟡🟢 (warna netral, misal abu-abu), dengan label: *"Belum ada jawaban — tindak lanjuti via telepon seperti biasa"*
+- Tujuan: mencegah perawat salah baca "tidak ada flag merah" sebagai "semua pasien aman", padahal sebagian datanya memang belum masuk
+
+---
+
+## 5. Rekomendasi Build (MVP)
+
+**Fase 1 — Validasi (sebelum build):**
+- Uji konsep ke 8-10 sejawat/klinik lain untuk konfirmasi kebutuhan serupa
+- Cari 2-3 klinik yang bersedia jadi pilot
+
+**Fase 2 — MVP Teknis:**
+- Mulai dari alur katarak dulu (volume lebih besar, kompleksitas lebih rendah)
+- Tools awal: WhatsApp Business API (atau Typeform-style form builder terintegrasi WA) + dashboard sederhana (Airtable/Retool) sebelum investasi ke custom development penuh
+- Fokus MVP: Titik 1-3 (edukasi, check-in 3-5 jam, check-in H+1) — ini yang paling sering terjadi dan paling mudah diukur dampaknya
+
+**Fase 3 — Perluasan:**
+- Tambah modul vitrektomi (jika ada perbedaan follow-up jangka panjang yang perlu digali lebih lanjut)
+- Lengkapi Titik 4 (follow-up lanjutan) setelah pola kontrolnya lebih jelas
+- Integrasi dengan sistem lain (misal KSIP Enterprise) jika relevan sebagai modul tambahan
+
+---
+
+## 6. Integrasi WhatsApp Business API
+
+Dua jalur utama untuk mengirim/menerima pesan WA otomatis:
+
+| Aspek | Meta Langsung (Cloud API) | Provider/BSP (Qontak, Wati, YCloud, dll) |
+|---|---|---|
+| Biaya platform | Gratis (hanya biaya per-pesan ke Meta) | Berbayar bulanan (~Rp750rb - 4jt+/bulan tergantung provider) |
+| Biaya per pesan | Tarif Meta langsung, tanpa markup | Tarif Meta + markup provider (~3-21%) |
+| Kebutuhan teknis | Perlu developer untuk webhook & integrasi ke dashboard | Panel siap pakai, tidak perlu developer untuk pemakaian dasar |
+| Waktu setup | 1-3 hari (verifikasi) + waktu develop integrasi | Bisa langsung jalan dalam hitungan jam-hari |
+| Verifikasi bisnis Meta | Tetap wajib | Provider biasanya bantu proses ini |
+| Kustomisasi | Bebas sesuai kebutuhan VisiTrack | Terbatas pada fitur bawaan provider |
+
+**Prasyarat jalur Meta langsung:** Meta Business Account terverifikasi (nama badan usaha resmi, alamat, dokumen izin usaha), nomor telepon khusus (belum pernah dipakai WA), metode pembayaran di Meta Business Manager, 2FA aktif.
+
+**Catatan tentang nomor WA Business klinik yang sudah ada:** Klinik dr. sudah punya nomor WhatsApp Business (aplikasi biasa) yang dipakai perawat untuk chat langsung/manual ke pasien. Nomor ini **tidak disarankan dimigrasikan** ke WhatsApp Business API, karena begitu dimigrasikan, fungsi chat manual lewat aplikasi akan hilang (nomor API tidak bisa lagi dipakai manual di HP). Rekomendasi: gunakan **nomor terpisah** khusus untuk VisiTrack (check-in otomatis, chatbot, pengingat), sementara nomor lama tetap dipertahankan untuk chat manual perawat seperti biasa.
+
+**Keputusan Final — Arsitektur Integrasi:** Menggunakan **WhatsApp Cloud API (Meta) resmi**, dengan **n8n** sebagai lapisan orkestrasi/automasi yang menyambungkan WhatsApp Cloud API ↔ dashboard VisiTrack ↔ chatbot AI. n8n punya node bawaan "WhatsApp Business Cloud" yang konek langsung ke Meta Cloud API (bukan lewat provider/BSP pihak ketiga), open-source, bisa di-self-host untuk kontrol penuh atas data pasien, dan tidak dikenakan markup biaya provider.
+
+**Alasan menghindari jalur tidak resmi (unofficial WhatsApp API/library):** Sempat dipertimbangkan pakai library tidak resmi (misal Baileys) untuk menghindari proses verifikasi Meta, tapi ditolak karena risiko nomor diblokir permanen oleh Meta (kebijakan 2026 makin ketat — satu komplain bisa memicu pemantauan, ada kasus banned tanpa peringatan) — risiko ini tidak bisa diterima untuk sistem yang menangani check-in pasca-operasi pasien, karena nomor terblokir berarti semua check-in (termasuk kasus darurat/flag merah) berhenti total tanpa peringatan.
+
+**Catatan biaya Meta:** Mulai 1 Oktober 2026, tarif pesan Meta berubah — pesan layanan (service messages) gratis untuk 1.000 pesan pertama per nomor bisnis per bulan, setelah itu dikenakan biaya per pesan. Perlu dipantau seiring pertumbuhan volume pasien.
+
+**Langkah selanjutnya:**
+1. Siapkan nomor telepon baru khusus VisiTrack (terpisah dari nomor WA Business existing)
+2. Buat & verifikasi Meta Business Account
+3. Advisor teknis setup n8n (self-hosted) + koneksi ke WhatsApp Cloud API + webhook ke dashboard VisiTrack
+4. Ajukan template pesan ke Meta untuk disetujui (edukasi, check-in, pengingat)
+
+**Catatan:** Kedua jalur tetap membutuhkan kerja developer untuk menyambungkan jawaban pasien ke dashboard VisiTrack — bedanya provider sudah mengurus verifikasi bisnis dan infrastruktur pengiriman pesan.
+
+---
+
+## 7. Chatbot AI (WhatsApp)
+
+**Bahasa:** Bahasa Indonesia dan Inggris, menyesuaikan otomatis dengan bahasa pasien.
+
+### 7.1 Fungsi Reaktif — Menjawab Pertanyaan Pasien
+
+- Menjawab pertanyaan umum pasien secara otomatis via WA (misal: "obatnya diminum berapa kali sehari?", "boleh nonton TV nggak?", "kapan boleh mandi normal?")
+- Sumber jawaban: materi edukasi standar per jenis tindakan (Katarak, Vitrektomi, LASIK, Oculoplasty, Injeksi) dari Titik 1
+- **Tidak** menjawab soal kondisi klinis pasien (nyeri, penglihatan buram, dll) — itu tetap ditangani lewat alur check-in terstruktur, bukan tugas chatbot
+
+**Eskalasi ke perawat (bukan dijawab sendiri oleh chatbot):**
+- Pasien menyebutkan gejala (nyeri, buram, merah, dll) di luar sesi check-in terjadwal → langsung diteruskan ke perawat dengan notifikasi, masuk sebagai flag 🔴 di dashboard
+- Pertanyaan di luar cakupan pengetahuan standar (chatbot tidak menebak-nebak soal medis)
+- Pasien secara eksplisit minta bicara dengan perawat/dokter
+- Setiap balasan chatbot selalu menyediakan opsi cepat "Bicara dengan perawat"
+
+### 7.2 Fungsi Proaktif — Pengingat Otomatis
+
+Chatbot mengirim pengingat tanpa diminta pasien, mencakup:
+- **Jadwal minum obat** (sesuai jenis tindakan dan resep masing-masing pasien)
+- **Jadwal kontrol** (sesuai Bagian 2 — termasuk H+7 khusus untuk Injeksi)
+- **Larangan/pantangan** (misal: larangan kena air, aktivitas yang harus dihindari)
+
+### 7.3 Prinsip Desain (Selaras dengan Bagian 4.1 — Pasien Lansia)
+
+- Jawaban singkat, bahasa sederhana, hindari respons panjang yang membingungkan
+- Tombol pilihan/quick reply lebih diutamakan daripada teks bebas
+- Chatbot tidak pernah menggantikan penilaian klinis — perannya murni informasi & pengingat
+
+---
+
+## 8. Pertanyaan Terbuka untuk Pengembangan Lanjutan
+
+1. Detail pertanyaan untuk Titik 4 (follow-up lanjutan) — apa yang biasanya ditanyakan di kontrol H+7/H+30 (katarak) atau H+3/minggu-2/bulan-1/bulan-3 (vitrektomi)?
+2. Siapa yang menilai foto pasien — apakah selalu perawat dulu, atau ada kasus yang otomatis harus ke dokter?
+3. Model harga final untuk klinik (per dokter bedah/bulan) — perlu divalidasi lewat percakapan dengan calon klinik pilot
+4. Kebutuhan penyimpanan data yang sesuai standar keamanan data kesehatan (rekam medis elektronik)
+5. Pemilihan provider WhatsApp Business API final (Meta langsung vs BSP) — perlu didiskusikan dengan advisor teknis
+6. Desain alur "diisi oleh pendamping" untuk pasien lansia yang tidak mengoperasikan HP sendiri
+7. Model/teknologi AI untuk chatbot (LLM apa yang dipakai, apakah perlu hosting khusus untuk data kesehatan)
+8. Cakupan penuh basis pengetahuan chatbot per jenis tindakan — perlu disusun bersama dr. sebagai sumber kebenaran (source of truth)
+
+---
+
+*Dokumen ini adalah acuan pengembangan awal berdasarkan alur kerja klinis yang sudah berjalan. Perlu direview lebih lanjut bersama tim teknis sebelum implementasi.*
